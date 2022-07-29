@@ -60,7 +60,7 @@ class Game {
     board[p.x][p.y].revealed = true;
     remainingTiles--;
     if (board[p.x][p.y].minesNearby == 0) {
-      for (Pair dp in cardinalDirections) {
+      for (Pair dp in ordinalDirections) {
         _dfs(dp + p);
       }
     }
@@ -95,7 +95,7 @@ class Game {
     board[p.x][p.y].revealed = true;
     remainingTiles--;
     if (board[p.x][p.y].minesNearby == 0) {
-      for (Pair dp in cardinalDirections) {
+      for (Pair dp in ordinalDirections) {
         _dfs(dp + p);
       }
     }

@@ -245,8 +245,9 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
                 LengthLimitingTextInputFormatter(2),
               ],
               onChanged: (value) {
-                if (_inputRows * _inputCols < int.parse(value)) {
-                  _minesController.text = (_inputRows * _inputCols).toString();
+                if (_inputRows * _inputCols <= int.parse(value)) {
+                  _minesController.text =
+                      (_inputRows * _inputCols - 1).toString();
                 }
                 _inputMines = int.parse(_minesController.text);
               },
@@ -256,9 +257,9 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
               builder: (context) => IconButton(
                     icon: const Icon(Icons.add),
                     onPressed: () {
-                      if (_inputRows * _inputCols < _inputMines) {
+                      if (_inputRows * _inputCols <= _inputMines) {
                         _minesController.text =
-                            (_inputRows * _inputCols).toString();
+                            (_inputRows * _inputCols - 1).toString();
                       }
                       _inputMines = int.parse(_minesController.text);
                       game.createGame(_inputRows, _inputCols, _inputMines);
