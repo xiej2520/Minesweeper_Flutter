@@ -1,4 +1,4 @@
-package com.example.minesweeper_forty_five_min
+package com.example.minesweeper
 
 import io.flutter.embedding.android.FlutterActivity
 

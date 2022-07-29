@@ -12,6 +12,7 @@ class Tile {
 
 class Game {
   List<List<Tile>> board = [];
+  List<List<int>> flagsNearby = [];
   int rows;
   int cols;
   int numMines;
@@ -21,6 +22,9 @@ class Game {
   Game(this.rows, this.cols, this.numMines) {
     board = List<List<Tile>>.generate(
         rows, (i) => List<Tile>.generate(cols, (j) => Tile(0)));
+    // for proper dfs clearing without giving away info
+    flagsNearby = List<List<int>>.generate(
+        rows, (i) => List<int>.generate(cols, (j) => 0));
     int minesToPlace = numMines;
     remainingTiles = rows * cols - numMines;
 
@@ -53,7 +57,13 @@ class Game {
       _revealBoard();
       return true;
     }
-    _dfs(p);
+    board[p.x][p.y].revealed = true;
+    remainingTiles--;
+    if (board[p.x][p.y].minesNearby == 0) {
+      for (Pair dp in cardinalDirections) {
+        _dfs(dp + p);
+      }
+    }
     if (remainingTiles == 0) {
       state = 1;
       _revealBoard();
@@ -63,6 +73,14 @@ class Game {
 
   void flag(Pair p) {
     board[p.x][p.y].flagged = !board[p.x][p.y].flagged;
+    int d = board[p.x][p.y].flagged ? 1 : -1;
+    flagsNearby[p.x][p.y] += d;
+    for (Pair dp in ordinalDirections) {
+      Pair q = p + dp;
+      if (q.x >= 0 && q.x < rows && q.y >= 0 && q.y < cols) {
+        flagsNearby[q.x][q.y] += d;
+      }
+    }
   }
 
   void _dfs(Pair p) {
@@ -70,16 +88,16 @@ class Game {
         p.x >= rows ||
         p.y < 0 ||
         p.y >= cols ||
-        board[p.x][p.y].minesNearby == -1 ||
+        flagsNearby[p.x][p.y] != 0 ||
         board[p.x][p.y].revealed) {
       return;
     }
-    board[p.x][p.y].flagged = false;
     board[p.x][p.y].revealed = true;
     remainingTiles--;
-    for (Pair dp in cardinalDirections) {
-      debugPrint((dp + p).toString());
-      _dfs(dp + p);
+    if (board[p.x][p.y].minesNearby == 0) {
+      for (Pair dp in cardinalDirections) {
+        _dfs(dp + p);
+      }
     }
   }
 
@@ -92,7 +110,7 @@ class Game {
   }
 
   Pair indexToPair(int index) {
-    return Pair(index ~/ rows, index % rows);
+    return Pair(index ~/ cols, index % cols);
   }
 
   int pairToIndex(Pair p) {
