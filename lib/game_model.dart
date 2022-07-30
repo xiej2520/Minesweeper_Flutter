@@ -17,7 +17,8 @@ class Game {
   int cols;
   int numMines;
   late int remainingTiles;
-  int state = 0; // 0: in progress, 1: won, 2: lost
+  late SplayTreeSet<int> remaining;
+  int state = -1; // -1: before first click, 0: in progress, 1: won, 2: lost
 
   Game(this.rows, this.cols, this.numMines) {
     board = List<List<Tile>>.generate(
@@ -25,55 +26,86 @@ class Game {
     // for proper dfs clearing without giving away info
     flagsNearby = List<List<int>>.generate(
         rows, (i) => List<int>.generate(cols, (j) => 0));
-    int minesToPlace = numMines;
     remainingTiles = rows * cols - numMines;
 
-    Random rng = Random();
+    int minesToPlace = numMines;
     // splaytree for list of remaining indicies without a mine
-    SplayTreeSet<int> remaining =
+    remaining =
         SplayTreeSet<int>.from([for (int i = 0; i < rows * cols; i++) i]);
+    Random rng = Random();
     while (minesToPlace > 0) {
       int randIndex = remaining.elementAt(rng.nextInt(remaining.length));
       Pair p = indexToPair(randIndex);
       remaining.remove(randIndex);
       board[p.x][p.y].minesNearby = -1; // set mine
-      for (Pair dp in ordinalDirections) {
-        Pair q = dp + p;
-        if (q.x >= 0 &&
-            q.x < rows &&
-            q.y >= 0 &&
-            q.y < cols &&
-            board[q.x][q.y].minesNearby != -1) {
-          board[q.x][q.y].minesNearby++;
-        }
-      }
+      _updateMineCountsNearby(p);
       minesToPlace--;
     }
   }
 
-  bool click(Pair p) {
+  void _updateMineCountsNearby(Pair p) {
+    for (Pair dp in ordinalDirections) {
+      Pair q = dp + p;
+      if (q.x >= 0 &&
+          q.x < rows &&
+          q.y >= 0 &&
+          q.y < cols &&
+          board[q.x][q.y].minesNearby != -1) {
+        board[q.x][q.y].minesNearby++;
+      }
+    }
+  }
+
+  void click(Pair p) {
+    // first click can't be a mine
+    if (state == -1) {
+      if (board[p.x][p.y].minesNearby == -1) {
+        board[p.x][p.y].minesNearby = 0;
+        for (Pair dp in ordinalDirections) {
+          Pair q = dp + p;
+          if (q.x >= 0 && q.x < rows && q.y >= 0 && q.y < cols) {
+            if (board[q.x][q.y].minesNearby == -1) {
+              board[p.x][p.y].minesNearby++;
+            } else {
+              board[q.x][q.y].minesNearby--;
+            }
+          }
+        }
+        remaining.remove(p);
+        Pair newMine = indexToPair(
+            remaining.elementAt(Random().nextInt(remaining.length)));
+        board[newMine.x][newMine.y].minesNearby = -1;
+        _updateMineCountsNearby(newMine);
+      }
+      state = 0;
+    }
+
+    // hit a mine
     if (board[p.x][p.y].minesNearby == -1) {
       state = 2;
       _revealBoard();
-      return true;
+      return;
     }
     board[p.x][p.y].revealed = true;
     remainingTiles--;
+    // dfs clear any empty tiles
     if (board[p.x][p.y].minesNearby == 0) {
       for (Pair dp in ordinalDirections) {
         _dfs(dp + p);
       }
     }
+    // won game, no non-mine tiles remaining
     if (remainingTiles == 0) {
       state = 1;
       _revealBoard();
     }
-    return false;
   }
 
+  // swap flag status of tile
   void flag(Pair p) {
     board[p.x][p.y].flagged = !board[p.x][p.y].flagged;
     int d = board[p.x][p.y].flagged ? 1 : -1;
+    // update flagsNearby
     flagsNearby[p.x][p.y] += d;
     for (Pair dp in ordinalDirections) {
       Pair q = p + dp;
@@ -83,6 +115,7 @@ class Game {
     }
   }
 
+  // recursively clear any adjacent tiles that are not surrounded by mines
   void _dfs(Pair p) {
     if (p.x < 0 ||
         p.x >= rows ||
@@ -94,6 +127,7 @@ class Game {
     }
     board[p.x][p.y].revealed = true;
     remainingTiles--;
+    // only continue recursion if current tile has no mines nearby
     if (board[p.x][p.y].minesNearby == 0) {
       for (Pair dp in ordinalDirections) {
         _dfs(dp + p);
@@ -117,10 +151,16 @@ class Game {
     return p.x * rows + p.y;
   }
 
-  static List<Pair> ordinalDirections = [
-    // 8 ordinal directions
-    for (int i = -1; i <= 1; i++) [for (int j = -1; j <= 1; j++) Pair(i, j)]
-  ].expand((i) => i).toList();
+  static List<Pair> ordinalDirections = cardinalDirections = [
+    Pair(-1, -1),
+    Pair(-1, 0),
+    Pair(-1, 1),
+    Pair(0, -1),
+    Pair(0, 1),
+    Pair(1, -1),
+    Pair(1, 0),
+    Pair(1, 1)
+  ];
 
   static List<Pair> cardinalDirections = [
     Pair(-1, 0),
@@ -144,9 +184,7 @@ class GameModel extends ChangeNotifier {
 
   void click(int index) {
     game.click(game.indexToPair(index));
-    if (game.state == 1 || game.state == 2) {
-      state = game.state;
-    }
+    state = game.state;
     notifyListeners();
   }
 
