@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
+import 'scaling_config.dart';
 import 'naval_mine_icon.dart';
 import 'game_model.dart';
 
@@ -36,27 +37,23 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
     _minesController.text = '10';
   }
 
-  Widget _buildTile(int index) {
+  Widget _buildTile(int index, ScaleConfig sc) {
     GameModel game = Provider.of<GameModel>(context, listen: false);
     Tile t = game.getTile(index);
     if (t.revealed) {
       if (t.minesNearby == -1) {
         return Container(
-          width: 100,
-          height: 100,
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey),
             color: Colors.black,
           ),
           child: game.state == 1
-              ? const Icon(NavalMine.navalMine,
-                  color: Colors.blueAccent, size: 48)
-              : const Icon(NavalMine.navalMine, color: Colors.red, size: 48),
+              ? Icon(NavalMine.navalMine,
+                  color: Colors.blueAccent, size: sc.iconSize)
+              : Icon(NavalMine.navalMine, color: Colors.red, size: sc.iconSize),
         );
       } else {
         return Container(
-          width: 100,
-          height: 100,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             border: Border.all(color: Colors.grey),
@@ -65,7 +62,7 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
           child: Text(t.minesNearby.toString(),
               style: TextStyle(
                 color: nearbyColorMap(t.minesNearby),
-                fontSize: 24,
+                fontSize: sc.tileFontSize,
                 fontWeight: FontWeight.bold,
               )),
         );
@@ -78,15 +75,15 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
           }
         },
         child: Container(
-            width: 100,
-            height: 100,
             decoration: BoxDecoration(
               border: Border.all(color: Colors.grey),
               color: Colors.black,
             ),
             child: t.flagged
                 ? IconButton(
-                    icon: const Icon(Icons.flag, color: Colors.red, size: 48),
+                    padding: EdgeInsets.zero,
+                    icon:
+                        Icon(Icons.flag, color: Colors.red, size: sc.iconSize),
                     onPressed: () => {})
                 : TextButton(
                     child: const Text(''), onPressed: () => game.click(index))),
@@ -94,31 +91,17 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
     }
   }
 
-  Widget _buildBoard(BuildContext context) {
+  Widget _buildBoard(BuildContext context, ScaleConfig sc) {
     GameModel game = context.watch<GameModel>();
     if (game.state == -1) {
       return Container(
-        height: 400,
-        width: 400,
-        color: Colors.black,
-      );
-    } else if (game.state == 0) {
-      return Container(
-        width: 800,
-        height: 800,
-        color: Colors.black,
-        margin: const EdgeInsets.all(5),
-        padding: const EdgeInsets.all(5),
-        child: GridView.count(
-          crossAxisCount: game.getBoardDims.y,
-          mainAxisSpacing: 0,
-          crossAxisSpacing: 0,
-          padding: const EdgeInsets.all(5),
-          children: List.generate(game.numTiles, (index) {
-            return _buildTile(index);
-          }),
-        ),
-      );
+          height: 400,
+          width: 400,
+          color: Colors.black,
+          child: const Center(
+            child: Text("Minesweeper",
+                style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
+          ));
     } else if (game.state == 1) {
       WidgetsBinding.instance.addPostFrameCallback((duration) =>
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -139,8 +122,8 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
               ))));
     }
     return Container(
-      width: 800,
-      height: 800,
+      width: sc.gridWidth,
+      height: sc.gridHeight,
       color: Colors.black,
       margin: const EdgeInsets.all(5),
       padding: const EdgeInsets.all(5),
@@ -148,9 +131,9 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
         crossAxisCount: game.getBoardDims.y,
         mainAxisSpacing: 0,
         crossAxisSpacing: 0,
-        padding: const EdgeInsets.all(5),
+        padding: const EdgeInsets.all(0),
         children: List.generate(game.numTiles, (index) {
-          return _buildTile(index);
+          return _buildTile(index, sc);
         }),
       ),
     );
@@ -159,6 +142,8 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
   @override
   Widget build(BuildContext context) {
     var game = context.watch<GameModel>();
+    ScaleConfig sc = ScaleConfig()..init(context);
+    sc.recalculate(_inputRows, _inputCols);
     return Scaffold(
         appBar: AppBar(title: Text(widget.title), actions: [
           DropdownButton(
@@ -273,7 +258,7 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                _buildBoard(context),
+                _buildBoard(context, sc),
               ],
             ),
           ),
