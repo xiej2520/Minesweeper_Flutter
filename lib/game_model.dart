@@ -16,6 +16,7 @@ class Game {
   int rows;
   int cols;
   int numMines;
+  late int numFlags;
   late int remainingTiles;
   late SplayTreeSet<int> remaining;
   int state = -1; // -1: before first click, 0: in progress, 1: won, 2: lost
@@ -26,6 +27,7 @@ class Game {
     // for proper dfs clearing without giving away info
     flagsNearby = List<List<int>>.generate(
         rows, (i) => List<int>.generate(cols, (j) => 0));
+    numFlags = 0;
     remainingTiles = rows * cols - numMines;
 
     int minesToPlace = numMines;
@@ -105,6 +107,7 @@ class Game {
   void flag(Pair p) {
     board[p.x][p.y].flagged = !board[p.x][p.y].flagged;
     int d = board[p.x][p.y].flagged ? 1 : -1;
+    numFlags += d;
     // update flagsNearby
     flagsNearby[p.x][p.y] += d;
     for (Pair dp in ordinalDirections) {
@@ -172,13 +175,16 @@ class Game {
 
 class GameModel extends ChangeNotifier {
   late Game game;
-  int state = -1; // -1: uninitialized, 0: in progress, 1: won, 2: lost
+  // -1: uninitialized, 0: in progress, 1: won, 2: lost
+  bool displayedEndMessage = false;
+  int state = -1;
 
   GameModel();
 
   void createGame(int rows, int cols, int numMines) {
     game = Game(rows, cols, numMines);
     state = 0;
+    displayedEndMessage = false;
     notifyListeners();
   }
 
@@ -197,6 +203,8 @@ class GameModel extends ChangeNotifier {
     Pair p = game.indexToPair(index);
     return game.board[p.x][p.y];
   }
+
+  int get minesRemaining => state == 0 ? game.numMines - game.numFlags : 0;
 
   int get numTiles => game.rows * game.cols;
   Pair get getBoardDims => Pair(game.rows, game.cols);

@@ -102,7 +102,7 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
             child: Text("Minesweeper",
                 style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
           ));
-    } else if (game.state == 1) {
+    } else if (game.state == 1 && !game.displayedEndMessage) {
       WidgetsBinding.instance.addPostFrameCallback((duration) =>
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               backgroundColor: Colors.black,
@@ -111,7 +111,8 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
                 style:
                     TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
               ))));
-    } else if (game.state == 2) {
+      game.displayedEndMessage = true;
+    } else if (game.state == 2 && !game.displayedEndMessage) {
       WidgetsBinding.instance.addPostFrameCallback((duration) =>
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               backgroundColor: Colors.black,
@@ -120,6 +121,7 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
                 style:
                     TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
               ))));
+      game.displayedEndMessage = true;
     }
     return Container(
       width: sc.gridWidth,
@@ -163,15 +165,16 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
                   d = 2;
                 }
                 _rowsController.text = difficulties[d][0].toString();
-                _inputRows = difficulties[d][0];
                 _colsController.text = difficulties[d][1].toString();
-                _inputCols = difficulties[d][1];
                 _minesController.text = difficulties[d][2].toString();
+                _inputRows = difficulties[d][0];
+                _inputCols = difficulties[d][1];
                 _inputMines = difficulties[d][2];
                 setState(() {
                   dropdownValue = newValue;
                 });
               }),
+          const SizedBox(width: 5),
           SizedBox(
             width: 40,
             child: TextFormField(
@@ -225,7 +228,7 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
             ),
           ),
           SizedBox(
-            width: 40,
+            width: 50,
             child: TextFormField(
               controller: _minesController,
               decoration: const InputDecoration(
@@ -234,7 +237,7 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
               keyboardType: TextInputType.number,
               inputFormatters: <TextInputFormatter>[
                 FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(3),
+                LengthLimitingTextInputFormatter(4),
               ],
               onChanged: (value) {
                 if (value == "") {
@@ -258,6 +261,10 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
+                game.state != -1
+                    ? Text('Mines remaining: ${game.minesRemaining}',
+                        style: const TextStyle(fontWeight: FontWeight.bold))
+                    : const Text(''),
                 _buildBoard(context, sc),
               ],
             ),
