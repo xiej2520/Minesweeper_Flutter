@@ -151,7 +151,9 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
 
   @override
   Widget build(BuildContext context) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    WidgetsBinding.instance.addPostFrameCallback((duration) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    });
     var game = context.watch<GameModel>();
     ScaleConfig sc = ScaleConfig()..init(context);
     game.state == -1

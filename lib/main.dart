@@ -21,11 +21,8 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       // allow exiting from textfield by tapping outside
-      onTap: () {
-        FocusScopeNode currentFocus = FocusScope.of(context);
-        if (!currentFocus.hasPrimaryFocus) {
-          currentFocus.unfocus();
-        }
+      onTapDown: (_) {
+        FocusManager.instance.primaryFocus?.unfocus();
       },
 
       child: MaterialApp(
