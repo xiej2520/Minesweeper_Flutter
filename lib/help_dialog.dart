@@ -39,8 +39,7 @@ class HelpDialog extends StatelessWidget {
           TextSpan(
               text: 'Not all minefields can be cleared without guessing.\n\n',
               style: TextStyle(fontWeight: FontWeight.bold)),
-          TextSpan(
-              text: 'The size of the board, as well as the number of mines, '),
+          TextSpan(text: 'The size of the board and the number of mines '),
           TextSpan(text: 'can be customized.'),
         ])),
         actions: [

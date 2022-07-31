@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'game_model.dart';
 import 'game_widget.dart';
+import 'timer_model.dart';
 import 'package:universal_html/html.dart' as html;
 
 void main() {
@@ -26,6 +27,7 @@ class App extends StatelessWidget {
           currentFocus.unfocus();
         }
       },
+
       child: MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Minesweeper',
@@ -33,8 +35,11 @@ class App extends StatelessWidget {
             brightness: Brightness.dark,
             primarySwatch: Colors.green,
           ),
-          home: ChangeNotifierProvider(
-              create: (context) => GameModel(),
+          home: MultiProvider(
+              providers: [
+                ChangeNotifierProvider(create: (context) => GameModel()),
+                ChangeNotifierProvider(create: (context) => TimerService()),
+              ],
               child: const MinesweeperGame(
                 title: 'Minesweeper',
               ))),

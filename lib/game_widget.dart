@@ -5,6 +5,7 @@ import 'scaling_config.dart';
 import 'help_dialog.dart';
 import 'naval_mine_icon.dart';
 import 'game_model.dart';
+import 'timer_model.dart';
 
 class MinesweeperGame extends StatefulWidget {
   const MinesweeperGame({Key? key, required this.title}) : super(key: key);
@@ -104,24 +105,30 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
                 style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
           ));
     } else if (game.state == 1 && !game.displayedEndMessage) {
-      WidgetsBinding.instance.addPostFrameCallback((duration) =>
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              backgroundColor: Colors.black,
-              content: Text(
-                'You won!',
-                style:
-                    TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
-              ))));
+      WidgetsBinding.instance.addPostFrameCallback((duration) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          backgroundColor: Colors.black,
+          content: Text(
+            'You won!',
+            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+          ),
+          duration: Duration(days: 1),
+        ));
+        Provider.of<TimerService>(context, listen: false).stop();
+      });
       game.displayedEndMessage = true;
     } else if (game.state == 2 && !game.displayedEndMessage) {
-      WidgetsBinding.instance.addPostFrameCallback((duration) =>
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              backgroundColor: Colors.black,
-              content: Text(
-                'You lost!',
-                style:
-                    TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-              ))));
+      WidgetsBinding.instance.addPostFrameCallback((duration) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          backgroundColor: Colors.black,
+          content: Text(
+            'You lost!',
+            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+          ),
+          duration: Duration(days: 1),
+        ));
+        Provider.of<TimerService>(context, listen: false).stop();
+      });
       game.displayedEndMessage = true;
     }
     return Container(
@@ -131,7 +138,7 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
       margin: const EdgeInsets.all(5),
       padding: const EdgeInsets.all(5),
       child: GridView.count(
-        crossAxisCount: game.getBoardDims.y,
+        crossAxisCount: game.boardDim.y,
         mainAxisSpacing: 0,
         crossAxisSpacing: 0,
         padding: const EdgeInsets.all(0),
@@ -144,9 +151,12 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
 
   @override
   Widget build(BuildContext context) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     var game = context.watch<GameModel>();
     ScaleConfig sc = ScaleConfig()..init(context);
-    sc.recalculate(_inputRows, _inputCols);
+    game.state == -1
+        ? sc.recalculate(_inputRows, _inputMines)
+        : sc.recalculate(game.boardDim.x, game.boardDim.y);
     return Scaffold(
         appBar: AppBar(title: Text(widget.title), actions: [
           IconButton(
@@ -270,6 +280,8 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
                     tooltip: 'New Game',
                     onPressed: () {
                       game.createGame(_inputRows, _inputCols, _inputMines);
+                      Provider.of<TimerService>(context, listen: false).reset();
+                      Provider.of<TimerService>(context, listen: false).start();
                     },
                   )),
         ]),
@@ -279,8 +291,25 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 game.state != -1
-                    ? Text('Mines remaining: ${game.minesRemaining}',
-                        style: const TextStyle(fontWeight: FontWeight.bold))
+                    ? Container(
+                        color: Colors.blue,
+                        alignment: Alignment.center,
+                        width: 200,
+                        padding: const EdgeInsets.all(5),
+                        child: Column(
+                          children: [
+                            Text('Mines remaining: ${game.minesRemaining}',
+                                style: const TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold)),
+                            Consumer<TimerService>(
+                                builder: (context, timer, child) {
+                              return Text('${timer.elapsed.inSeconds}s',
+                                  style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold));
+                            })
+                          ],
+                        ))
                     : const Text(''),
                 _buildBoard(context, sc),
               ],
@@ -295,4 +324,28 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
     }
     _inputMines = int.parse(_minesController.text);
   }
+}
+
+Color nearbyColorMap(int nearbyMines) {
+  switch (nearbyMines) {
+    case 0:
+      return Colors.greenAccent.shade700;
+    case 1:
+      return Colors.yellowAccent;
+    case 2:
+      return Colors.yellow.shade900;
+    case 3:
+      return Colors.redAccent.shade700;
+    case 4:
+      return Colors.pink.shade700;
+    case 5:
+      return Colors.deepPurpleAccent.shade700;
+    case 6:
+      return Colors.purpleAccent.shade700;
+    case 7:
+      return Colors.indigoAccent.shade400;
+    case 8:
+      return Colors.lightBlueAccent;
+  }
+  return Colors.white;
 }

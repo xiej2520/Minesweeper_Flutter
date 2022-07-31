@@ -207,7 +207,7 @@ class GameModel extends ChangeNotifier {
   int get minesRemaining => state == 0 ? game.numMines - game.numFlags : 0;
 
   int get numTiles => game.rows * game.cols;
-  Pair get getBoardDims => Pair(game.rows, game.cols);
+  Pair get boardDim => Pair(game.rows, game.cols);
 }
 
 class Pair {
@@ -221,28 +221,4 @@ class Pair {
 
   @override
   String toString() => '($x,$y)';
-}
-
-Color nearbyColorMap(int nearbyMines) {
-  switch (nearbyMines) {
-    case 0:
-      return Colors.greenAccent.shade700;
-    case 1:
-      return Colors.yellowAccent;
-    case 2:
-      return Colors.yellow.shade700;
-    case 3:
-      return Colors.yellow.shade900;
-    case 4:
-      return Colors.red.shade700;
-    case 5:
-      return Colors.red.shade900;
-    case 6:
-      return Colors.purple.shade700;
-    case 7:
-      return Colors.blue.shade900;
-    case 8:
-      return Colors.pink.shade600;
-  }
-  return Colors.white;
 }

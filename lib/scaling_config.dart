@@ -23,7 +23,8 @@ class ScaleConfig {
   void recalculate(int rows, int cols) {
     width = _mediaQueryData.size.width;
     height = _mediaQueryData.size.height;
-    heightUsable = height - _mediaQueryData.padding.top - kToolbarHeight;
+    heightUsable = height - _mediaQueryData.padding.top - kToolbarHeight - 40;
+    // 61 is height of mines remaining/timer box
 
     double boardRatio = rows / cols;
     double aspectRatio = width / heightUsable;
@@ -32,7 +33,7 @@ class ScaleConfig {
       gridHeight = heightUsable * 0.95;
     } else {
       gridWidth = min(width * 0.9, heightUsable * 0.9);
-      gridHeight = gridWidth * boardRatio + 10;
+      gridHeight = gridWidth * boardRatio;
     }
     tileSize = (gridWidth - 10) / cols;
     iconSize = tileSize * 0.8;
