@@ -26,7 +26,6 @@ class App extends StatelessWidget {
       },
 
       child: MaterialApp(
-          debugShowCheckedModeBanner: false,
           title: 'Minesweeper',
           theme: ThemeData(
             brightness: Brightness.dark,

@@ -23,19 +23,20 @@ class ScaleConfig {
   void recalculate(int rows, int cols) {
     width = _mediaQueryData.size.width;
     height = _mediaQueryData.size.height;
-    heightUsable = height - _mediaQueryData.padding.top - kToolbarHeight - 40;
+    heightUsable = height - _mediaQueryData.padding.top - kToolbarHeight - 60;
     // 61 is height of mines remaining/timer box
 
-    double boardRatio = rows / cols;
+    double boardRatio = cols / rows;
     double aspectRatio = width / heightUsable;
-    if (boardRatio >= 3 || aspectRatio >= 3) {
-      gridWidth = width / 3;
-      gridHeight = heightUsable * 0.95;
+    if (aspectRatio > 2.5 * boardRatio) {
+      // switch to vertical with scrollbar
+      tileSize = (width / 2 / cols).floorToDouble();
     } else {
-      gridWidth = min(width * 0.9, heightUsable * 0.9);
-      gridHeight = gridWidth * boardRatio;
+      tileSize =
+          min(width * 0.9 / cols, heightUsable * 0.9 / rows).floorToDouble();
     }
-    tileSize = (gridWidth - 10) / cols;
+    gridWidth = tileSize * cols + 10;
+    gridHeight = tileSize * rows + 10;
     iconSize = tileSize * 0.8;
     tileFontSize = tileSize * 0.6;
   }

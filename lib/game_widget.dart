@@ -17,9 +17,6 @@ class MinesweeperGame extends StatefulWidget {
 }
 
 class _MinesweeperGameState extends State<MinesweeperGame> {
-  int _inputRows = 8;
-  int _inputCols = 8;
-  int _inputMines = 10;
   final TextEditingController _rowsController = TextEditingController();
   final TextEditingController _colsController = TextEditingController();
   final TextEditingController _minesController = TextEditingController();
@@ -141,7 +138,6 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
         crossAxisCount: game.boardDim.y,
         mainAxisSpacing: 0,
         crossAxisSpacing: 0,
-        padding: const EdgeInsets.all(0),
         children: List.generate(game.numTiles, (index) {
           return _buildTile(index, sc);
         }),
@@ -157,7 +153,7 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
     var game = context.watch<GameModel>();
     ScaleConfig sc = ScaleConfig()..init(context);
     game.state == -1
-        ? sc.recalculate(_inputRows, _inputMines)
+        ? sc.recalculate(1, 1)
         : sc.recalculate(game.boardDim.x, game.boardDim.y);
     return Scaffold(
         appBar: AppBar(title: Text(widget.title), actions: [
@@ -194,9 +190,6 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
                 _rowsController.text = difficulties[d][0].toString();
                 _colsController.text = difficulties[d][1].toString();
                 _minesController.text = difficulties[d][2].toString();
-                _inputRows = difficulties[d][0];
-                _inputCols = difficulties[d][1];
-                _inputMines = difficulties[d][2];
                 setState(() {
                   dropdownValue = newValue;
                 });
@@ -215,15 +208,10 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
                 LengthLimitingTextInputFormatter(2),
               ],
               onChanged: (value) {
-                if (value == "") {
-                  _rowsController.text = _inputRows.toString();
-                } else {
-                  _inputRows = int.parse(value);
-                  if (_inputRows > 50) {
-                    _inputRows = 50;
+                if (value != '') {
+                  if (int.parse(value) > 50) {
                     _rowsController.text = '50';
                   }
-                  _fixMinesInput();
                 }
               },
             ),
@@ -241,15 +229,10 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
                 LengthLimitingTextInputFormatter(2),
               ],
               onChanged: (value) {
-                if (value == "") {
-                  _colsController.text = _inputCols.toString();
-                } else {
-                  _inputCols = int.parse(value);
-                  if (_inputCols > 50) {
-                    _inputCols = 50;
+                if (value != '') {
+                  if (int.parse(value) > 50) {
                     _colsController.text = '50';
                   }
-                  _fixMinesInput();
                 }
               },
             ),
@@ -266,12 +249,6 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(4),
               ],
-              onChanged: (value) {
-                if (value == "") {
-                  _minesController.text = _inputMines.toString();
-                }
-                _fixMinesInput();
-              },
             ),
           ),
           Builder(
@@ -281,7 +258,24 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
                     splashRadius: 28,
                     tooltip: 'New Game',
                     onPressed: () {
-                      game.createGame(_inputRows, _inputCols, _inputMines);
+                      if (_rowsController.text == '') {
+                        _rowsController.text = '1';
+                      }
+                      if (_colsController.text == '') {
+                        _colsController.text = '1';
+                      }
+                      if (_minesController.text == '') {
+                        _minesController.text = '0';
+                      }
+                      int rows = int.parse(_rowsController.text);
+                      int cols = int.parse(_colsController.text);
+                      int mines = int.parse(_minesController.text);
+                      if (rows * cols <= mines) {
+                        mines = rows * cols - 1;
+                        _minesController.text = mines.toString();
+                      }
+
+                      game.createGame(rows, cols, mines);
                       Provider.of<TimerService>(context, listen: false).reset();
                       Provider.of<TimerService>(context, listen: false).start();
                     },
@@ -318,13 +312,6 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
             ),
           ),
         ));
-  }
-
-  void _fixMinesInput() {
-    if (_inputRows * _inputCols <= int.parse(_minesController.text)) {
-      _minesController.text = (_inputRows * _inputCols - 1).toString();
-    }
-    _inputMines = int.parse(_minesController.text);
   }
 }
 
