@@ -25,6 +25,7 @@ class HelpDialog extends StatelessWidget {
           TextSpan(text: ' to toggle a flag'),
           WidgetSpan(child: Icon(Icons.flag, color: Colors.red)),
           TextSpan(text: '.\n'),
+          TextSpan(text: 'Flagged tiles are protected from clearing.\n'),
           TextSpan(text: 'The game ends when '),
           TextSpan(
               text: 'all tiles have been cleared',
