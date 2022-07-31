@@ -18,15 +18,26 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Minesweeper',
-        theme: ThemeData(
-          brightness: Brightness.dark,
-          primarySwatch: Colors.green,
-        ),
-        home: ChangeNotifierProvider(
-            create: (context) => GameModel(),
-            child: const MinesweeperGame(title: 'Minesweeper')));
+    return GestureDetector(
+      // allow exiting from textfield by tapping outside
+      onTap: () {
+        FocusScopeNode currentFocus = FocusScope.of(context);
+        if (!currentFocus.hasPrimaryFocus) {
+          currentFocus.unfocus();
+        }
+      },
+      child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Minesweeper',
+          theme: ThemeData(
+            brightness: Brightness.dark,
+            primarySwatch: Colors.green,
+          ),
+          home: ChangeNotifierProvider(
+              create: (context) => GameModel(),
+              child: const MinesweeperGame(
+                title: 'Minesweeper',
+              ))),
+    );
   }
 }

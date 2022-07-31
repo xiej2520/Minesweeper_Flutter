@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/gestures.dart';
 import 'scaling_config.dart';
+import 'help_dialog.dart';
 import 'naval_mine_icon.dart';
 import 'game_model.dart';
 
@@ -68,11 +68,12 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
         );
       }
     } else {
-      return Listener(
-        onPointerDown: (PointerDownEvent event) {
-          if (event.buttons == kSecondaryMouseButton) {
-            game.flag(index);
-          }
+      return GestureDetector(
+        onSecondaryTap: () {
+          game.flag(index);
+        },
+        onLongPress: () {
+          game.flag(index);
         },
         child: Container(
             decoration: BoxDecoration(
@@ -148,6 +149,20 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
     sc.recalculate(_inputRows, _inputCols);
     return Scaffold(
         appBar: AppBar(title: Text(widget.title), actions: [
+          IconButton(
+              hoverColor: Colors.blue,
+              splashRadius: 28,
+              tooltip: 'Help',
+              onPressed: () {
+                WidgetsBinding.instance
+                    .addPostFrameCallback((duration) => showDialog(
+                        context: context,
+                        builder: (context) {
+                          return const HelpDialog();
+                        }));
+              },
+              icon: const Icon(Icons.help_outline)),
+          const SizedBox(width: 5),
           DropdownButton(
               value: dropdownValue,
               items: const [
@@ -250,10 +265,12 @@ class _MinesweeperGameState extends State<MinesweeperGame> {
           Builder(
               builder: (context) => IconButton(
                     icon: const Icon(Icons.add),
+                    hoverColor: Colors.green,
+                    splashRadius: 28,
+                    tooltip: 'New Game',
                     onPressed: () {
                       game.createGame(_inputRows, _inputCols, _inputMines);
                     },
-                    tooltip: 'New Game',
                   )),
         ]),
         body: SingleChildScrollView(
