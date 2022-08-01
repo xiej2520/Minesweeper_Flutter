@@ -1,4 +1,4 @@
-# Minesweeper in Flutter
+# [Minesweeper in Flutter](https://xiej2520.github.io/Minesweeper_Flutter/#/)
 
 Minesweeper project for learning Flutter, written as fast as possible then improved later.
 
